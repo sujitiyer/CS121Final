@@ -1,4 +1,7 @@
 -- setup.sql
+DROP DATABASE IF EXISTS shelterdb;
+CREATE DATABASE shelterdb;
+USE shelterdb;
 
 -- Drop tables in the correct order to avoid foreign key constraint issues
 DROP TABLE IF EXISTS adoption_requests;
@@ -34,9 +37,8 @@ CREATE TABLE shelters (
     location VARCHAR(255) NOT NULL,
     zip_code INT,
     staff_id BIGINT UNSIGNED,
-    CONSTRAINT fk_shelter_staff
-        FOREIGN KEY (staff_id)
-        REFERENCES staff(staff_id)
+    FOREIGN KEY (staff_id)
+    REFERENCES staff(staff_id)
         ON DELETE SET NULL
 );
 
@@ -70,9 +72,8 @@ CREATE TABLE animals (
     shelter_id BIGINT UNSIGNED,
     is_healthy TINYINT(1) NOT NULL DEFAULT 0, -- not healthy until evaluated
     is_available TINYINT(1) NOT NULL DEFAULT 0, -- 0: not available; 1: available 
-    CONSTRAINT fk_animal_shelter
-        FOREIGN KEY (shelter_id)
-        REFERENCES shelters(shelter_id)
+    FOREIGN KEY (shelter_id)
+    REFERENCES shelters(shelter_id)
         ON DELETE CASCADE
 );
 
@@ -86,16 +87,13 @@ CREATE TABLE adoptions (
     adopter_id BIGINT UNSIGNED,
     animal_id BIGINT UNSIGNED,
     shelter_id BIGINT UNSIGNED,
-    CONSTRAINT fk_adoption_adopter
-        FOREIGN KEY (adopter_id)
+    FOREIGN KEY (adopter_id)
         REFERENCES adopters(adopter_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_adoption_animal
-        FOREIGN KEY (animal_id)
+    FOREIGN KEY (animal_id)
         REFERENCES animals(animal_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_adoption_shelter
-        FOREIGN KEY (shelter_id)
+    FOREIGN KEY (shelter_id)
         REFERENCES shelters(shelter_id)
         ON DELETE CASCADE
 );
@@ -108,12 +106,10 @@ CREATE TABLE adoption_requests (
     adopter_id BIGINT UNSIGNED,
     animal_id BIGINT UNSIGNED,
     request_date DATE NOT NULL,
-    CONSTRAINT fk_request_adopter
-        FOREIGN KEY (adopter_id)
+    FOREIGN KEY (adopter_id)
         REFERENCES adopters(adopter_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_request_animal
-        FOREIGN KEY (animal_id)
+    FOREIGN KEY (animal_id)
         REFERENCES animals(animal_id)
         ON DELETE CASCADE
 );
