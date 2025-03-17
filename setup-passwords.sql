@@ -29,7 +29,7 @@ CREATE PROCEDURE sp_add_adopter(
     new_address VARCHAR(255),
     new_zipcode INT,
     new_phone VARCHAR(20),
-    new_date_joined DATE,
+    new_date_joined DATE
 )
 BEGIN
     DECLARE salt CHAR(8);

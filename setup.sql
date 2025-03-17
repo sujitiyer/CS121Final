@@ -4,13 +4,13 @@ CREATE DATABASE shelterdb;
 USE shelterdb;
 
 -- Drop tables in the correct order to avoid foreign key constraint issues
+DROP VIEW IF EXISTS adoption_overview;
 DROP TABLE IF EXISTS adoption_requests;
 DROP TABLE IF EXISTS adoptions;
 DROP TABLE IF EXISTS animals;
 DROP TABLE IF EXISTS adopters;
 DROP TABLE IF EXISTS shelters;
 DROP TABLE IF EXISTS staff;
-DROP VIEW IF EXISTS adoption_overview
 
 -- ======================================================
 -- 1. staff TABLE
@@ -130,6 +130,6 @@ SELECT
     ad.date_taken AS adoption_date,
     ad.adopter_id
 FROM animals a
-LEFT JOIN adoptions ad ON a.animal_id = ad.animal_id;
+JOIN adoptions ad ON a.animal_id = ad.animal_id;
 
 CREATE INDEX idx_intake_date ON animals(intake_date);

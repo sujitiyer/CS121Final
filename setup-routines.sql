@@ -1,5 +1,4 @@
--- procedures_udfs.sql
--- Drop funcs/procedures/views if already existing
+-- Drop funcs/procedures if already existing
 DROP FUNCTION IF EXISTS days_in_shelter;
 DROP PROCEDURE IF EXISTS add_animal;
 DROP PROCEDURE IF EXISTS add_shelter;

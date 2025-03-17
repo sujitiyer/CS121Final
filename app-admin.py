@@ -309,6 +309,22 @@ def get_adoptions_per_month():
     else:
         print("No adoption data available.")
 
+def get_days_in_shelter():
+    """
+    
+    """
+    try:
+        animal_id = int(input("Enter Animal ID: "))
+    except ValueError:
+        print("Invalid Animal ID. Please enter a number.")
+        return False
+    sql = "SELECT days_in_shelter(%s);"
+    rows = run_query(sql, (animal_id,))
+    if rows:
+        print(rows[0][0])
+    else:
+        print("Animal not found.")
+
 # ----------------------------------------------------------------------
 # Command-Line Functionality
 # ----------------------------------------------------------------------

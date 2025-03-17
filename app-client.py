@@ -13,6 +13,7 @@ import mysql.connector
 # To get error codes from the connector, useful for user-friendly
 # error-handling
 import mysql.connector.errorcode as errorcode
+from datetime import datetime
 
 # Debugging flag to print errors when debugging that shouldn't be visible
 # to an actual client. ***Set to False when done testing.***
@@ -33,7 +34,7 @@ def get_conn():
     try:
         conn = mysql.connector.connect(
           host='localhost',
-          user='appclient',
+          user='animalclient',
           # Find port in MAMP or MySQL Workbench GUI or with
           # SHOW VARIABLES WHERE variable_name LIKE 'port';
           port='3306',  # this may change!
@@ -107,6 +108,8 @@ def register_adopter():
     result = run_query(sql, (new_email, new_password, new_name, new_address, new_zipcode, new_phone, new_date_joined))
     if result:
         print("Registration successful!")
+    else:
+        print("Registration failed.")
     return bool(result)
 
 def login_adopter():
