@@ -88,12 +88,11 @@ BEGIN
 
         -- Set animal's availability to 'Adopted'
         UPDATE animals
-        SET availability_status = 'Adopted'
+        SET is_available = 0
         WHERE animal_id = p_pet_id;
     END IF;
 END !
 
--- TODO: Previously discussed DDL changes
 -- Trigger: After healthy medicals, animal is available
 -- OR, after adoption, animal is not available
 CREATE TRIGGER trg_update_availability
@@ -102,17 +101,19 @@ ON animals
 FOR EACH ROW
 BEGIN
     -- If the health_status changed to 'healthy', set availability_status to 'Available'
-    IF OLD.health_status <> 'healthy' AND NEW.health_status = 'healthy' THEN
+    IF OLD.is_healthy = 0 AND NEW.is_healthy = 1 THEN
         UPDATE animals
-           SET availability_status = 'Available'
-         WHERE animal_id = NEW.animal_id;
+        SET is_available = 1
+        WHERE animal_id = NEW.animal_id;
     END IF;
 
     -- If an adoption occurs, update availability status
-    IF (OLD.availability_status <> 'Adopted') AND (NEW.availability_status = 'Adopted') THEN
+    IF EXISTS (
+        SELECT 1 FROM adoptions WHERE animal_id = NEW.animal_id
+    ) THEN
         UPDATE animals
-           SET availability_status = 'Adopted'
-         WHERE animal_id = NEW.animal_id;
+        SET is_available = 0
+        WHERE animal_id = NEW.animal_id;
     END IF;
 END !
 

@@ -84,6 +84,7 @@ CREATE TABLE animals (
     intake_date DATE,
     shelter_id INT,
     medical_record_id INT NULL,
+    is_available TINYINT(1) NOT NULL DEFAULT 0, -- 0: not available; 1: available 
 
     CONSTRAINT fk_animal_shelter
         FOREIGN KEY (shelter_id)
