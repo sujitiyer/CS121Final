@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS adoptions;
 DROP TABLE IF EXISTS animals;
 DROP TABLE IF EXISTS adopters;
 DROP TABLE IF EXISTS shelters;
-DROP TABLE IF EXISTS medical_records;
 DROP TABLE IF EXISTS staff;
 
 -- ======================================================
@@ -26,20 +25,7 @@ CREATE TABLE staff (
 );
 
 -- ======================================================
--- 2. medical_records TABLE
--- ------------------------------------------------------
--- Stores medical history for animals.
--- All text types because summaries might be long.
--- TODO: health_status
-CREATE TABLE medical_records (
-    medical_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    diagnosis TEXT,
-    treatment TEXT,
-    summary TEXT
-);
-
--- ======================================================
--- 3. shelters TABLE
+-- 2. shelters TABLE
 -- ------------------------------------------------------
 -- Stores shelter information. Each shelter may be managed by one staff member.
 CREATE TABLE shelters (
@@ -54,7 +40,7 @@ CREATE TABLE shelters (
 );
 
 -- ======================================================
--- 4. adopters TABLE
+-- 3. adopters TABLE
 -- ------------------------------------------------------
 -- Stores potential adopter (client) information.
 CREATE TABLE adopters (
@@ -71,7 +57,7 @@ CREATE TABLE adopters (
 );
 
 -- ======================================================
--- 5. animals TABLE
+-- 4. animals TABLE
 -- ------------------------------------------------------
 -- Stores animal information available for adoption.
 -- TODO: availability_status
@@ -83,21 +69,17 @@ CREATE TABLE animals (
     gender VARCHAR(10), -- Char(1), 'M'/'F'/'U'/'A'
     intake_date DATE,
     shelter_id INT,
-    medical_record_id INT NULL,
+    is_healthy TINYINT(1) NOT NULL DEFAULT 0, -- not healthy until evaluated
     is_available TINYINT(1) NOT NULL DEFAULT 0, -- 0: not available; 1: available 
 
     CONSTRAINT fk_animal_shelter
         FOREIGN KEY (shelter_id)
         REFERENCES shelters(shelter_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_animal_medical
-        FOREIGN KEY (medical_record_id)
-        REFERENCES medical_records(medical_record_id)
-        ON DELETE SET NULL
 );
 
 -- ======================================================
--- 6. adoptions TABLE
+-- 5. adoptions TABLE
 -- ------------------------------------------------------
 -- Records adoptions that have occurred.
 CREATE TABLE adoptions (
@@ -121,9 +103,8 @@ CREATE TABLE adoptions (
 );
 
 -- ======================================================
--- 7. ADOPTION_REQUESTS TABLE
+-- 6. ADOPTION_REQUESTS TABLE
 -- ------------------------------------------------------
--- Optionally, record adoption requests before final approval.
 CREATE TABLE adoption_requests (
     request_id INT AUTO_INCREMENT PRIMARY KEY,
     adopter_id INT,

@@ -55,7 +55,7 @@ CREATE PROCEDURE transfer_animal(IN p_animal_id INT, IN p_new_shelter_id INT)
 BEGIN
     UPDATE animals
     SET shelter_id = p_new_shelter_id
-    WHERE animal_id = p_animal_id;
+    WHERE animal_id = p_animal_id AND is_available = 1;
 END !
 
 
@@ -65,16 +65,16 @@ CREATE PROCEDURE adopt_pet(
     IN p_adopter_id INT
 )
 BEGIN
-    DECLARE prev_adopted INT DEFAULT 0;
+    DECLARE not_adopted INT DEFAULT 0;
 
-    SELECT COUNT(*)
-    INTO prev_adopted
-    FROM adoptions
+    SELECT is_available
+    INTO not_adopted
+    FROM animals
     WHERE animal_id = p_pet_id;
 
-    IF prev_adopted > 0 THEN
+    IF not_adopted = 0 THEN
         SIGNAL SQLSTATE '45000'
-               SET MESSAGE_TEXT = 'This pet is already adopted.';
+            SET MESSAGE_TEXT = 'This pet is not available for adoption.';
     ELSE
         -- Insert an adoption record using the current date
         INSERT INTO adoptions (date_taken, adopter_id, animal_id, shelter_id)
@@ -107,6 +107,13 @@ BEGIN
         WHERE animal_id = NEW.animal_id;
     END IF;
 
+    -- If an animal becomes unhealthy again, it should not be available for adoption
+    IF OLD.is_healthy = 1 AND NEW.is_healthy = 0 THEN
+        UPDATE animals
+        SET is_available = 0
+        WHERE animal_id = NEW.animal_id;
+    END IF;
+
     -- If an adoption occurs, update availability status
     IF EXISTS (
         SELECT 1 FROM adoptions WHERE animal_id = NEW.animal_id
@@ -117,9 +124,16 @@ BEGIN
     END IF;
 END !
 
+CREATE PROCEDURE update_health_status(IN p_animal_id INT, IN p_new_health_status TINYINT(1))
+BEGIN
+    UPDATE animals
+    SET is_healthy = p_new_health_status
+    WHERE animal_id = p_animal_id;
+END !
+
 DELIMITER ;
 
--- View: Provides a combined overview of animal details, adoption info, and medical records.
+-- View: Provides a combined overview of animal details and adoption info
 CREATE VIEW Adoption_Overview AS
 SELECT 
     a.animal_id,
@@ -128,11 +142,9 @@ SELECT
     a.age,
     a.gender,
     a.intake_date,
+    a.is_healthy,
+    a.is_available,
     ad.date_taken AS adoption_date,
-    ad.adopter_id,
-    mr.diagnosis,
-    mr.treatment,
-    mr.summary
+    ad.adopter_id
 FROM animals a
-LEFT JOIN adoptions ad ON a.animal_id = ad.animal_id
-LEFT JOIN medical_records mr ON a.medical_record_id = mr.medical_record_id;
+LEFT JOIN adoptions ad ON a.animal_id = ad.animal_id;

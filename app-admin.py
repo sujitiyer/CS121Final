@@ -92,7 +92,7 @@ def run_query(sql, params=()):
 # ----------------------------------------------------------------------
 # ADMIN FUNCTION STUBS
 # ----------------------------------------------------------------------
-def add_animal(breed, name, age, gender, intake_date, medical_record_id, shelter_id):
+def add_animal(breed, name, age, gender, intake_date, shelter_id):
     """
     Adds a new animal to the database.
 
@@ -102,17 +102,16 @@ def add_animal(breed, name, age, gender, intake_date, medical_record_id, shelter
         age (int): Age of the animal.
         gender (str): Gender of the animal.
         intake_date (str): Date of intake (YYYY-MM-DD).
-        medical_record_id (int): ID of associated medical record.
         shelter_id (int): ID of the shelter where the animal is located.
 
     Returns:
         bool: True if the animal was added successfully, False otherwise.
     """
     sql = """
-        INSERT INTO animals (breed, name, age, gender, intake_date, medical_record_id, shelter_id)
+        INSERT INTO animals (breed, name, age, gender, intake_date, shelter_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
-    result = run_query(sql, (breed, name, age, gender, intake_date, medical_record_id, shelter_id))
+    result = run_query(sql, (breed, name, age, gender, intake_date, shelter_id))
     return bool(result)
 
 def update_animal(animal_id, updated_fields):
@@ -142,26 +141,27 @@ def delete_animal(animal_id):
     Returns:
         bool: True if deletion was successful, False otherwise.
     """
-    sql = "DELETE FROM animals WHERE animal_id = %s;"
+    sql = "DELETE FROM animals WHERE animal_id = %s AND animal_id NOT IN (SELECT animal_id FROM adoptions);"
     result = run_query(sql, (animal_id,))
     return bool(result)
 
-def add_shelter(location, staff_id):
+def add_shelter(location, zip_code, staff_id):
     """
     Adds a new shelter to the database.
 
     Args:
         location (str): The location/address of the shelter.
+        zip_code (int): THe zip code of the shelter.
         staff_id (int): The ID of the staff member who manages this shelter.
 
     Returns:
         bool: True if the shelter was added successfully, False otherwise.
     """
     sql = """
-        INSERT INTO shelters (location, staff_id)
-        VALUES (%s, %s);
+        INSERT INTO shelters (location, zip_code, staff_id)
+        VALUES (%s, %s, %s);
     """
-    result = run_query(sql, (location, staff_id))
+    result = run_query(sql, (location, zip_code, staff_id))
     return bool(result)
 
 def update_shelter(shelter_id, updated_fields):
@@ -191,11 +191,11 @@ def delete_shelter(shelter_id):
     Returns:
         bool: True if deletion was successful, False otherwise.
     """
-    sql = "DELETE FROM shelters WHERE shelter_id = %s;"
+    sql = "DELETE FROM shelters WHERE shelter_id = %s AND shelter_id NOT IN (SELECT shelter_id FROM animals);"
     result = run_query(sql, (shelter_id,))
     return bool(result)
 
-def add_staff(first_name, last_name, role, phone_number):
+def add_staff(first_name, last_name, role, phone_number, email, password):
     """
     Adds a new staff member to the database.
 
@@ -204,15 +204,17 @@ def add_staff(first_name, last_name, role, phone_number):
         last_name (str): staff member's last name.
         role (str): The role of the staff member (e.g., 'admin', 'manager').
         phone_number (str): Contact phone number.
+        email (str): Staff member's email address.
+        password (str): Staff member's password (should be hashed in production).
 
     Returns:
         bool: True if staff member was added successfully, False otherwise.
     """
     sql = """
-        INSERT INTO staff (first_name, last_name, role, phone_number)
-        VALUES (%s, %s, %s, %s);
+        INSERT INTO staff (first_name, last_name, role, phone_number, email, password)
+        VALUES (%s, %s, %s, %s, %s, %s);
     """
-    result = run_query(sql, (first_name, last_name, role, phone_number))
+    result = run_query(sql, (first_name, last_name, role, phone_number, email, password))
     return bool(result)
 
 # ----------------------------------------------------------------------
@@ -231,7 +233,6 @@ def get_shelter_animal_count(shelter_id):
     sql = "SELECT COUNT(*) AS count FROM animals WHERE shelter_id = %s;"
     rows = run_query(sql, (shelter_id,))
     if rows:
-        # rows[0] might look like (5,) if not using dictionary=True, or {'count': 5} if dictionary cursor
         return rows[0][0]
     return 0
 
@@ -282,7 +283,7 @@ def get_average_animal_stay_time():
         float or None: The average stay time in days, or None if no data is available.
     """
     sql = """
-        SELECT AVG(DATEDIFF(date_taken, intake_date)) AS avg_stay
+        SELECT COALESCE(AVG(DATEDIFF(date_taken, intake_date)), 0) AS avg_stay
         FROM animals
         JOIN adoptions ON animals.animal_id = adoptions.animal_id;
     """
@@ -308,6 +309,7 @@ def admin_menu():
     while True:
         choice = input("\nSelect an option: ").strip().lower()
         
+        # TODO: Add logic
         if choice == '1':
             add_animal()
         elif choice == '2':

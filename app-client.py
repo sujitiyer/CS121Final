@@ -117,12 +117,12 @@ def register_adopter(name, address, email, phone, password, date_joined, waitlis
 
 def view_available_animals():
     """
-    Retrieves a list of animals currently available for adoption (not yet adopted).
+    Retrieves a list of animals currently available for adoption.
     
     Returns:
         list: A list of tuples containing animal data, or None on failure.
     """
-    sql = "SELECT * FROM animals WHERE animal_id NOT IN (SELECT animal_id FROM adoptions);"
+    sql = "SELECT * FROM animals WHERE is_available = 1;"
     rows = run_query(sql)
     return rows
 
@@ -183,10 +183,10 @@ def find_animals_by_distance(user_zip):
                ABS(shelters.zip_code - %s) AS zip_diff
         FROM animals
         JOIN shelters ON animals.shelter_id = shelters.shelter_id
-        WHERE animals.animal_id NOT IN (SELECT animal_id FROM adoptions)
+        WHERE animals.is_available = 1
         ORDER BY zip_diff ASC;
     """
-    params = (adopter_zip,)
+    params = (user_zip,)
     rows = run_query(sql, params)
     return rows
 
@@ -202,7 +202,7 @@ def submit_adoption_request(adopter_id, animal_id):
         bool: True if request was successfully recorded, False otherwise.
     """
     sql = """
-        INSERT INTO Adoption_Requests (adopter_id, animal_id, request_date)
+        INSERT INTO adoption_requests (adopter_id, animal_id, request_date)
         VALUES (%s, %s, NOW());
     """
     result = run_query(sql, (adopter_id, animal_id))
@@ -243,7 +243,6 @@ def get_shelter_animal_count(shelter_id):
     sql = "SELECT COUNT(*) AS count FROM animals WHERE shelter_id = %s;"
     rows = run_query(sql, (shelter_id,))
     if rows:
-        # rows[0] might look like (5,) if not using dictionary=True, or {'count': 5} if dictionary cursor
         return rows[0][0]
     return 0
 
@@ -294,7 +293,7 @@ def get_average_animal_stay_time():
         float or None: The average stay time in days, or None if no data is available.
     """
     sql = """
-        SELECT AVG(DATEDIFF(date_taken, intake_date)) AS avg_stay
+        SELECT COALESCE(AVG(DATEDIFF(date_taken, intake_date)), 0) AS avg_stay
         FROM animals
         JOIN adoptions ON animals.animal_id = adoptions.animal_id;
     """
@@ -313,8 +312,9 @@ def client_menu():
     print("2. View all available animals")
     print("3. View details for a specific animal")
     print("4. Search animals by breed/age")
-    print("5. Submit an adoption request")
-    print("6. View your adoption history")
+    print("5. Find animals near you")
+    print("6. Submit an adoption request")
+    print("7. View your adoption history")
     print("q. Quit")
     while True:
         choice = input("\nSelect an option: ").strip().lower()
@@ -323,13 +323,30 @@ def client_menu():
         elif choice == '2':
             view_available_animals()
         elif choice == '3':
-            view_animal_details()
+            animal_id = int(input("Enter Animal ID: "))
+            details = view_animal_details(animal_id)
+            print(details) if details else print("Animal not found.")
         elif choice == '4':
-            search_animals()
+            breed = input("Enter breed (or leave blank): ")
+            age = input("Enter age (or leave blank): ")
+            age = int(age) if age.isdigit() else None
+            animals = search_animals(breed, age)
         elif choice == '5':
-            submit_adoption_request()
+            user_zip = input("Enter your zip code: ")
+            if not user_zip.isdigit():
+                print("Invalid zip code. Please enter a valid number.")
+                continue
+            user_zip = int(user_zip)
+            animals_nearby = find_animals_by_distance(user_zip)
         elif choice == '6':
-            view_adoption_history()
+            adopter_id = int(input("Enter your adopter ID: "))
+            animal_id = int(input("Enter the Animal ID you want to adopt: "))
+            success = submit_adoption_request(adopter_id, animal_id)
+            print("Adoption request submitted!" if success else "Failed to submit request.")
+        elif choice == '7':
+            adopter_id = int(input("Enter your adopter ID: "))
+            history = view_adoption_history(adopter_id)
+            print(history if history else "No adoption history found.")
         elif choice == 'q':
             quit_ui()
         else:
