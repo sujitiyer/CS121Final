@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS animals;
 DROP TABLE IF EXISTS adopters;
 DROP TABLE IF EXISTS shelters;
 DROP TABLE IF EXISTS staff;
+DROP VIEW IF EXISTS adoption_overview
 
 -- ======================================================
 -- 1. staff TABLE
@@ -52,8 +53,7 @@ CREATE TABLE adopters (
     phone VARCHAR(20),
     salt CHAR(8) NOT NULL,
     password BINARY(64) NOT NULL,
-    date_joined DATE,
-    waitlist_number INT
+    date_joined DATE
 );
 
 -- ======================================================

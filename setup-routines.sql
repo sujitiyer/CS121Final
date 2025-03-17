@@ -1,7 +1,6 @@
 -- procedures_udfs.sql
 -- Drop funcs/procedures/views if already existing
 DROP FUNCTION IF EXISTS days_in_shelter;
-DROP FUNCTION IF EXISTS get_waitlist_position;
 DROP PROCEDURE IF EXISTS add_animal;
 DROP PROCEDURE IF EXISTS add_shelter;
 DROP PROCEDURE IF EXISTS transfer_animal;
@@ -24,33 +23,6 @@ BEGIN
     END IF;
     SET days = DATEDIFF(CURDATE(), intake);
     RETURN days;
-END !
-
--- UDF: Returns the waitlist “rank” for a given adopter based on waitlist_number.
-CREATE FUNCTION get_waitlist_position(p_adopter_id INT)
-RETURNS INT
-DETERMINISTIC
-BEGIN
-    DECLARE wnum INT DEFAULT 0;
-    DECLARE pos INT DEFAULT 0;
-
-    SELECT waitlist_number
-        INTO wnum
-        FROM adopters
-        WHERE adopter_id = p_adopter_id;
-
-    IF wnum IS NULL THEN
-        RETURN 0;
-    END IF;
-
-    -- Count how many adopters have a lower waitlist_number
-    SELECT COUNT(*) + 1
-        INTO pos
-        FROM adopters
-        WHERE waitlist_number IS NOT NULL
-            AND waitlist_number < wnum;
-
-    RETURN pos;
 END !
 
 -- Procedure: Adds an animal to a shelter.
