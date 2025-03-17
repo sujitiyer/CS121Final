@@ -4,6 +4,8 @@ DROP FUNCTION IF EXISTS days_in_shelter;
 DROP FUNCTION IF EXISTS get_waitlist_position;
 DROP PROCEDURE IF EXISTS transfer_animal;
 DROP PROCEDURE IF EXISTS adopt_pet;
+DROP PROCEDURE IF EXISTS submit_adoption_request;
+DROP PROCEDURE IF EXISTS update_health_status;
 DROP TRIGGER IF EXISTS trg_update_availability;
 DROP VIEW IF EXISTS Adoption_Overview;
 
@@ -59,20 +61,20 @@ BEGIN
 END !
 
 
--- Procedure: Inserts an adoption record and removes existing requests
+-- Procedure: Inserts an adoption record and removes existing adoption requests
 CREATE PROCEDURE adopt_pet(
     IN p_pet_id INT,
     IN p_adopter_id INT
 )
 BEGIN
-    DECLARE not_adopted INT DEFAULT 0;
+    DECLARE pet_available INT DEFAULT 0;
 
     SELECT is_available
-    INTO not_adopted
+    INTO pet_available
     FROM animals
     WHERE animal_id = p_pet_id;
 
-    IF not_adopted = 0 THEN
+    IF pet_available = 0 THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'This pet is not available for adoption.';
     ELSE
@@ -86,11 +88,20 @@ BEGIN
         WHERE adopter_id = p_adopter_id
             AND animal_id = p_pet_id;
 
-        -- Set animal's availability to 'Adopted'
         UPDATE animals
         SET is_available = 0
         WHERE animal_id = p_pet_id;
     END IF;
+END !
+
+-- Procedure: Submits an adoption request by inserting a row into adoption_requests.
+CREATE PROCEDURE submit_adoption_request(
+    IN p_adopter_id INT,
+    IN p_animal_id INT
+)
+BEGIN
+    INSERT INTO adoption_requests (adopter_id, animal_id, request_date)
+    VALUES (p_adopter_id, p_animal_id, NOW());
 END !
 
 -- Trigger: After healthy medicals, animal is available
@@ -123,28 +134,3 @@ BEGIN
         WHERE animal_id = NEW.animal_id;
     END IF;
 END !
-
-CREATE PROCEDURE update_health_status(IN p_animal_id INT, IN p_new_health_status TINYINT(1))
-BEGIN
-    UPDATE animals
-    SET is_healthy = p_new_health_status
-    WHERE animal_id = p_animal_id;
-END !
-
-DELIMITER ;
-
--- View: Provides a combined overview of animal details and adoption info
-CREATE VIEW Adoption_Overview AS
-SELECT 
-    a.animal_id,
-    a.name AS animal_name,
-    a.breed,
-    a.age,
-    a.gender,
-    a.intake_date,
-    a.is_healthy,
-    a.is_available,
-    ad.date_taken AS adoption_date,
-    ad.adopter_id
-FROM animals a
-LEFT JOIN adoptions ad ON a.animal_id = ad.animal_id;
