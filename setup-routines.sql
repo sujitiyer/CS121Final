@@ -2,12 +2,13 @@
 -- Drop funcs/procedures/views if already existing
 DROP FUNCTION IF EXISTS days_in_shelter;
 DROP FUNCTION IF EXISTS get_waitlist_position;
+DROP PROCEDURE IF EXISTS add_animal;
+DROP PROCEDURE IF EXISTS add_shelter;
 DROP PROCEDURE IF EXISTS transfer_animal;
 DROP PROCEDURE IF EXISTS adopt_pet;
 DROP PROCEDURE IF EXISTS submit_adoption_request;
 DROP PROCEDURE IF EXISTS update_health_status;
 DROP TRIGGER IF EXISTS trg_update_availability;
-DROP VIEW IF EXISTS Adoption_Overview;
 
 DELIMITER !
 
@@ -52,6 +53,31 @@ BEGIN
     RETURN pos;
 END !
 
+-- Procedure: Adds an animal to a shelter.
+CREATE PROCEDURE add_animal(
+    IN p_breed VARCHAR(255),
+    IN p_name VARCHAR(255),
+    IN p_age INT,
+    IN p_gender CHAR(1),
+    IN p_intake_date DATE,
+    IN p_shelter_id BIGINT UNSIGNED
+)
+BEGIN
+    INSERT INTO animals (breed, name, age, gender, intake_date, shelter_id)
+    VALUES (p_breed, p_name, p_age, p_gender, p_intake_date, p_shelter_id);
+END !
+
+-- Procedure: Adds shelter to database
+CREATE PROCEDURE add_shelter(
+    IN p_location VARCHAR(255),
+    IN p_zip_code INT,
+    IN p_staff_id BIGINT UNSIGNED
+)
+BEGIN
+    INSERT INTO shelters (location, zip_code, staff_id)
+    VALUES (p_location, p_zip_code, p_staff_id);
+END !
+
 -- Procedure: Transfers an animal to a new shelter.
 CREATE PROCEDURE transfer_animal(IN p_animal_id INT, IN p_new_shelter_id INT)
 BEGIN
@@ -59,7 +85,6 @@ BEGIN
     SET shelter_id = p_new_shelter_id
     WHERE animal_id = p_animal_id AND is_available = 1;
 END !
-
 
 -- Procedure: Inserts an adoption record and removes existing adoption requests
 CREATE PROCEDURE adopt_pet(
@@ -104,6 +129,14 @@ BEGIN
     VALUES (p_adopter_id, p_animal_id, NOW());
 END !
 
+-- Procedure: Updates health status for an animal
+CREATE PROCEDURE update_health_status(IN p_animal_id INT, IN p_new_health_status TINYINT(1))
+BEGIN
+    UPDATE animals
+    SET is_healthy = p_new_health_status
+    WHERE animal_id = p_animal_id;
+END !
+
 -- Trigger: After healthy medicals, animal is available
 -- OR, after adoption, animal is not available
 CREATE TRIGGER trg_update_availability
@@ -126,11 +159,8 @@ BEGIN
     END IF;
 
     -- If an adoption occurs, update availability status
-    IF EXISTS (
-        SELECT 1 FROM adoptions WHERE animal_id = NEW.animal_id
-    ) THEN
-        UPDATE animals
-        SET is_available = 0
-        WHERE animal_id = NEW.animal_id;
-    END IF;
+    UPDATE animals
+    SET is_available = 0
+    WHERE animal_id = NEW.animal_id
+    AND EXISTS (SELECT 1 FROM adoptions WHERE animal_id = NEW.animal_id);
 END !

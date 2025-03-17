@@ -1,4 +1,4 @@
--- setup-proposal.sql
+-- setup.sql
 
 -- Drop tables in the correct order to avoid foreign key constraint issues
 DROP TABLE IF EXISTS adoption_requests;
@@ -20,8 +20,8 @@ CREATE TABLE staff (
     role VARCHAR(50) NOT NULL,
     phone_number VARCHAR(20),
     email VARCHAR(255) NOT NULL UNIQUE,
-    -- In production, store hashed passwords
-    password VARCHAR(255) NOT NULL
+    salt CHAR(8) NOT NULL,
+    password BINARY(64) NOT NULL
 );
 
 -- ======================================================
@@ -50,8 +50,8 @@ CREATE TABLE adopters (
     zip_code INT, 
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(20),
-    -- In production, store hashed passwords
-    password VARCHAR(255) NOT NULL,
+    salt CHAR(8) NOT NULL,
+    password BINARY(64) NOT NULL,
     date_joined DATE,
     waitlist_number INT
 );
@@ -70,7 +70,6 @@ CREATE TABLE animals (
     shelter_id BIGINT UNSIGNED,
     is_healthy TINYINT(1) NOT NULL DEFAULT 0, -- not healthy until evaluated
     is_available TINYINT(1) NOT NULL DEFAULT 0, -- 0: not available; 1: available 
-
     CONSTRAINT fk_animal_shelter
         FOREIGN KEY (shelter_id)
         REFERENCES shelters(shelter_id)
@@ -87,7 +86,6 @@ CREATE TABLE adoptions (
     adopter_id BIGINT UNSIGNED,
     animal_id BIGINT UNSIGNED,
     shelter_id BIGINT UNSIGNED,
-
     CONSTRAINT fk_adoption_adopter
         FOREIGN KEY (adopter_id)
         REFERENCES adopters(adopter_id)
@@ -110,7 +108,6 @@ CREATE TABLE adoption_requests (
     adopter_id BIGINT UNSIGNED,
     animal_id BIGINT UNSIGNED,
     request_date DATE NOT NULL,
-
     CONSTRAINT fk_request_adopter
         FOREIGN KEY (adopter_id)
         REFERENCES adopters(adopter_id)
