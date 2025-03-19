@@ -1,3 +1,9 @@
+DROP FUNCTION IF EXISTS make_salt;
+DROP PROCEDURE IF EXISTS sp_add_adopter;
+DROP PROCEDURE IF EXISTS sp_add_staff;
+DROP FUNCTION IF EXISTS authenticate_adopter;
+DROP FUNCTION IF EXISTS authenticate_staff;
+
 -- (Provided) This function generates a specified number of characters for using as a
 -- salt in passwords.
 DELIMITER !
@@ -34,8 +40,8 @@ CREATE PROCEDURE sp_add_adopter(
 BEGIN
     DECLARE salt CHAR(8);
     SET salt = make_salt(8);
-    INSERT INTO adopters(email, password, name, address, phone, date_joined, salt)
-    VALUES(new_email, SHA2(CONCAT(salt, new_password), 256), new_name, new_address, new_phone, new_date_joined, salt);
+    INSERT INTO adopters(name, address, zip_code, email, phone, salt, password_hash, date_joined)
+    VALUES(new_name, new_address, new_zipcode, new_email, new_phone, salt, SHA2(CONCAT(salt, new_password), 256), new_date_joined);
 END !
 DELIMITER ;
 
@@ -52,8 +58,8 @@ CREATE PROCEDURE sp_add_staff(
 BEGIN
     DECLARE salt CHAR(8);
     SET salt = make_salt(8);
-    INSERT INTO staff(email, password, first_name, last_name, role, phone_number, salt)
-    VALUES(new_email, SHA2(CONCAT(salt, new_password), 256), new_first_name, new_last_name, new_role, new_phone_number, salt);
+    INSERT INTO staff(first_name, last_name, role, phone_number, email, salt, password_hash)
+    VALUES(new_first_name, new_last_name, new_role, new_phone_number, new_email, salt, SHA2(CONCAT(salt, new_password), 256));
 END !
 DELIMITER ;
 
@@ -67,7 +73,7 @@ BEGIN
   -- On success, we want to return the adopter ID
   DECLARE aid BIGINT UNSIGNED;
   
-  SELECT adopter_id, salt, password 
+  SELECT adopter_id, salt, password_hash
     INTO aid, stored_salt, stored_hash
   FROM adopters
   WHERE adopters.email = email;
@@ -77,7 +83,7 @@ BEGIN
   IF computed_hash = stored_hash THEN
     RETURN aid;
   ELSE
-    RETURN NULL;
+    RETURN 0;
   END IF;
 END !
 DELIMITER ;
@@ -92,7 +98,7 @@ BEGIN
   -- On success, we want to return the staff ID
   DECLARE sid BIGINT UNSIGNED;
   
-  SELECT staff_id, salt, password 
+  SELECT staff_id, salt, password_hash
     INTO sid, stored_salt, stored_hash
   FROM staff
   WHERE staff.email = email;
@@ -102,7 +108,7 @@ BEGIN
   IF computed_hash = stored_hash THEN
     RETURN sid;
   ELSE
-    RETURN NULL;
+    RETURN 0;
   END IF;
 END !
 DELIMITER ;

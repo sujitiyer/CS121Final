@@ -1,4 +1,6 @@
-INSERT INTO staff (first_name, last_name, role, phone_number, email, salt, password) VALUES
+-- DISCLAIMER: This data was generated with AI with Professor Hovik's permission
+
+INSERT INTO staff (first_name, last_name, role, phone_number, email, salt, password_hash) VALUES
 ('Alice', 'Johnson', 'manager', '555-123-4567', 'alice.johnson@shelter.com', 'A1b2C3d4', SHA2(CONCAT('A1b2C3d4', 'SecurePass1'), 256)),
 ('Bob', 'Smith', 'admin', '555-234-5678', 'bob.smith@shelter.com', 'X5y6Z7w8', SHA2(CONCAT('X5y6Z7w8', 'AdminPass2'), 256)),
 ('Charlie', 'Brown', 'vet', '555-345-6789', 'charlie.brown@shelter.com', 'Q1W2E3R4', SHA2(CONCAT('Q1W2E3R4', 'VetPass3'), 256)),
@@ -101,7 +103,7 @@ INSERT INTO shelters (location, zip_code, staff_id) VALUES ('Chicago, IL', 99637
 INSERT INTO shelters (location, zip_code, staff_id) VALUES ('Seattle, WA', 90171, 18);
 INSERT INTO shelters (location, zip_code, staff_id) VALUES ('Los Angeles, CA', 99587, 34);
 
-INSERT INTO adopters (name, address, zip_code, email, phone, salt, password, date_joined) VALUES
+INSERT INTO adopters (name, address, zip_code, email, phone, salt, password_hash, date_joined) VALUES
 ('Adopter1', '123 Main St Apt 1', 91910, 'adopter1@email.com', '555-708-5483', 'A1B2C3D4', SHA2(CONCAT('A1B2C3D4', 'SecurePass1'), 256), '2023-07-29'),
 ('Adopter2', '123 Main St Apt 2', 99060, 'adopter2@email.com', '555-410-4551', 'X5Y6Z7W8', SHA2(CONCAT('X5Y6Z7W8', 'SecurePass2'), 256), '2021-11-19'),
 ('Adopter3', '123 Main St Apt 3', 95557, 'adopter3@email.com', '555-472-4010', 'Q9W8E7R6', SHA2(CONCAT('Q9W8E7R6', 'SecurePass3'), 256), '2021-06-26'),
@@ -132,25 +134,25 @@ INSERT INTO adopters (name, address, zip_code, email, phone, salt, password, dat
 
 
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Coco', 'German Shepherd', 6, 'F', '2024-03-03', 41, 0, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Nala', 'Bulldog', 11, 'U', '2024-08-19', 40, 0, 1);       
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rex', 'Boxer', 15, 'M', '2024-10-24', 41, 1, 0);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Nala', 'Bulldog', 11, 'U', '2024-08-19', 40, 1, 1);       
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rex', 'Boxer', 15, 'M', '2024-10-24', 41, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Moose', 'Bulldog', 10, 'U', '2024-07-09', 50, 0, 0);      
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Penny', 'Husky', 11, 'U', '2024-07-03', 28, 1, 1);        
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Ginger', 'Poodle', 11, 'F', '2024-05-19', 31, 0, 0);      
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Max', 'Poodle', 13, 'M', '2022-09-19', 34, 1, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Ruby', 'Dachshund', 6, 'M', '2023-06-10', 30, 0, 0);      
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Charlie', 'Doberman', 5, 'M', '2022-09-18', 23, 1, 0);    
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Charlie', 'Doberman', 5, 'M', '2022-09-18', 23, 1, 1);    
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bear', 'Dachshund', 9, 'U', '2023-07-30', 10, 1, 0);      
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Buddy', 'Shih Tzu', 1, 'M', '2022-07-24', 1, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bailey', 'Boxer', 15, 'U', '2024-06-30', 32, 1, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Coco', 'Mastiff', 2, 'F', '2024-08-13', 20, 1, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Chloe', 'Great Dane', 9, 'U', '2023-07-09', 38, 0, 1);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Maggie', 'Beagle', 4, 'U', '2023-11-24', 45, 0, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Coco', 'Mastiff', 2, 'F', '2024-08-13', 20, 1, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Chloe', 'Great Dane', 9, 'U', '2023-07-09', 38, 1, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Maggie', 'Beagle', 4, 'U', '2023-11-24', 45, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Benny', 'Beagle', 10, 'F', '2023-06-13', 37, 1, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Finn', 'Golden Retriever', 13, 'U', '2023-05-09', 38, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Chloe', 'Shih Tzu', 13, 'U', '2023-01-28', 40, 1, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Buster', 'Beagle', 2, 'F', '2024-10-14', 17, 0, 1);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bentley', 'Dachshund', 4, 'M', '2022-09-28', 45, 0, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Buster', 'Beagle', 2, 'F', '2024-10-14', 17, 1, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bentley', 'Dachshund', 4, 'M', '2022-09-28', 45, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rocky', 'Mastiff', 15, 'M', '2024-01-01', 13, 0, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Murphy', 'Labrador', 8, 'F', '2025-03-13', 12, 1, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Ace', 'Labrador', 15, 'F', '2024-04-10', 11, 1, 0);
@@ -166,19 +168,19 @@ INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healt
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Ace', 'Boxer', 9, 'M', '2022-07-31', 26, 0, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rosie', 'Bulldog', 4, 'F', '2023-12-09', 2, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Lily', 'Dachshund', 10, 'F', '2023-04-25', 43, 0, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Chloe', 'Great Dane', 14, 'F', '2023-02-17', 3, 0, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Chloe', 'Great Dane', 14, 'F', '2023-02-17', 3, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Chloe', 'Dachshund', 14, 'M', '2024-05-23', 46, 0, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bailey', 'Poodle', 5, 'M', '2024-01-28', 9, 1, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Finn', 'Bulldog', 13, 'U', '2022-04-08', 10, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rosie', 'Doberman', 3, 'M', '2025-01-04', 7, 0, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Winston', 'Beagle', 7, 'M', '2024-03-29', 15, 0, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bella', 'Bulldog', 1, 'U', '2022-04-19', 29, 1, 0);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Bella', 'Bulldog', 1, 'U', '2022-04-19', 29, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rosie', 'Dachshund', 8, 'U', '2024-02-21', 40, 0, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Moose', 'Doberman', 3, 'U', '2023-07-13', 27, 0, 0);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Moose', 'Doberman', 3, 'U', '2023-07-13', 27, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Rex', 'Husky', 15, 'M', '2022-06-20', 45, 1, 0);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Winston', 'Boxer', 15, 'F', '2022-07-28', 41, 0, 1);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Benny', 'Great Dane', 2, 'M', '2022-08-21', 34, 0, 1);
-INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Charlie', 'Golden Retriever', 1, 'M', '2022-04-21', 43, 0, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Winston', 'Boxer', 15, 'F', '2022-07-28', 41, 1, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Benny', 'Great Dane', 2, 'M', '2022-08-21', 34, 1, 1);
+INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Charlie', 'Golden Retriever', 1, 'M', '2022-04-21', 43, 1, 1);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Milo', 'Beagle', 1, 'M', '2024-07-25', 8, 1, 0);
 INSERT INTO animals (name, breed, age, gender, intake_date, shelter_id, is_healthy, is_available) VALUES ('Molly', 'Labrador', 15, 'U', '2023-09-20', 29, 1, 0);
 

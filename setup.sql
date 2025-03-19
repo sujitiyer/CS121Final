@@ -25,7 +25,7 @@ CREATE TABLE staff (
     phone_number VARCHAR(20),
     email VARCHAR(255) NOT NULL UNIQUE,
     salt CHAR(8) NOT NULL,
-    password BINARY(64) NOT NULL
+    password_hash BINARY(64) NOT NULL
 );
 
 -- ======================================================
@@ -54,7 +54,7 @@ CREATE TABLE adopters (
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(20),
     salt CHAR(8) NOT NULL,
-    password BINARY(64) NOT NULL,
+    password_hash BINARY(64) NOT NULL,
     date_joined DATE
 );
 
@@ -70,8 +70,8 @@ CREATE TABLE animals (
     gender CHAR(1) CHECK (gender IN ('M', 'F', 'U')), 
     intake_date DATE NOT NULL,
     shelter_id BIGINT UNSIGNED,
-    is_healthy TINYINT(1) NOT NULL DEFAULT 0, -- not healthy until evaluated
-    is_available TINYINT(1) NOT NULL DEFAULT 0, -- 0: not available; 1: available 
+    is_healthy TINYINT NOT NULL DEFAULT 0, -- not healthy until evaluated
+    is_available TINYINT NOT NULL DEFAULT 0, -- 0: not available; 1: available 
     FOREIGN KEY (shelter_id)
     REFERENCES shelters(shelter_id)
         ON DELETE CASCADE

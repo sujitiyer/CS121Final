@@ -33,7 +33,7 @@ def get_conn():
     try:
         conn = mysql.connector.connect(
           host='localhost',
-          user='appadmin',
+          user='animaladmin',
           # Find port in MAMP or MySQL Workbench GUI or with
           # SHOW VARIABLES WHERE variable_name LIKE 'port';
           port='3306',  # this may change!
@@ -61,7 +61,7 @@ def get_conn():
 def run_query(sql, params=()):
     """
     Helper function to execute an SQL query with the global connection.
-    Abstracts away cursor handling, commits, and error handling.
+    Abstracts away cursor handling and error handling.
     """
     cursor = conn.cursor()
     try:
@@ -69,6 +69,7 @@ def run_query(sql, params=()):
         if cursor.description: 
             rows = cursor.fetchall()
             return rows
+        conn.commit() # had to use this for the sp_add_staff function to actually make changes
         return True
     except mysql.connector.Error as err:
         if DEBUG:
@@ -99,7 +100,7 @@ def register_admin():
     sql = """CALL sp_add_staff(%s, %s, %s, %s, %s, %s);"""
     result = run_query(sql, (new_email, new_password, new_firstname, new_lastname, new_role, new_phone))
     if result:
-        print("Registration successful!")
+        print("\nRegistration successful!\n")
     return bool(result)
 
 def login_admin():
@@ -112,15 +113,15 @@ def login_admin():
     password = input("Password: ")
     
     # Call the MySQL authentication function
-    sql = "SELECT authenticate_admin(%s, %s);"
+    sql = "SELECT authenticate_staff(%s, %s);"
     result = run_query(sql, (email, password))
 
-    if result and result[0][0] is not None:
+    if result and result[0][0] != 0:
         staff_id = result[0][0]  # Extract the staff_id
-        print("Login successful!")
+        print("\nLogin successful!\n")
         return staff_id
 
-    print("Login failed. Please check your credentials.")
+    print("\nLogin failed. Please check your credentials.\n")
     return None
 
 def add_animal():
@@ -149,9 +150,9 @@ def add_animal():
     sql = "CALL add_animal(%s, %s, %s, %s, %s, %s);"
     result = run_query(sql, (breed, name, age, gender, intake_date, shelter_id))
     if result:
-        print("Animal added successfully!")
+        print("\nAnimal added successfully!\n")
     else:
-        print("Failed to add animal.")
+        print("\nFailed to add animal.\n")
     return bool(result)
 
 def add_shelter():
@@ -169,12 +170,12 @@ def add_shelter():
     except ValueError:
         print("Invalid staff ID.")
         return
-    sql = "CALL sp_add_shelter(%s, %s, %s);"
+    sql = "CALL add_shelter(%s, %s, %s);"
     result = run_query(sql, (location, zip_code, staff_id))
     if result:
-        print("Shelter added successfully!")
+        print("\nShelter added successfully!\n")
     else:
-        print("Failed to add shelter.")
+        print("\nFailed to add shelter.\n")
     return bool(result)
 
 def transfer_animal():
@@ -194,10 +195,31 @@ def transfer_animal():
     sql = "CALL transfer_animal(%s, %s);"
     result = run_query(sql, (animal_id, new_shelter_id))
     if result:
-        print("Animal transferred successfully!")
+        print("\nAnimal transferred successfully!\n")
     else:
-        print("Failed to transfer animal.")
+        print("\nFailed to transfer animal.\n")
     return bool(result)
+
+def get_current_adoption_requests():
+    """
+    Retrieves all current adoption requests.
+    """
+    sql = """
+        SELECT ar.request_id, a.name AS animal_name, ad.name AS adopter_name, ar.request_date
+        FROM adoption_requests ar
+        JOIN animals a ON ar.animal_id = a.animal_id
+        JOIN adopters ad ON ar.adopter_id = ad.adopter_id
+        ORDER BY ar.request_date DESC;
+    """
+    result = run_query(sql)   
+    if result:
+        print("\n=== Current Adoption Requests ===\n")
+        print(f"{'Request ID'.ljust(12)} {'Animal Name'.ljust(20)} {'Adopter Name'.ljust(20)} {'Request Date'}")
+        print("-" * 65)
+        for row in result:
+            print(f"{str(row[0]).ljust(12)} {row[1].ljust(20)} {row[2].ljust(20)} {row[3]}")
+    else:
+        print("\n No current adoption requests found.\n")
 
 def approve_adoption():
     """
@@ -216,9 +238,9 @@ def approve_adoption():
     sql = "CALL adopt_pet(%s, %s);"
     result = run_query(sql, (pet_id, adopter_id))
     if result:
-        print("Adoption successful!.")
+        print("\nAdoption successful!.\n")
     else:
-        print("Adoption failed.")
+        print("\nAdoption failed.\n")
     return bool(result)
 
 def perform_medical_check():
@@ -245,10 +267,10 @@ def perform_medical_check():
     result = run_query(sql, (animal_id, new_health_status))
 
     if result:
-        print("Health status updated successfully!")
+        print("\nHealth status updated successfully!\n")
         return True
     else:
-        print("Failed to update health status.")
+        print("\nFailed to update health status.\n")
         return False
 
 def get_animals_per_shelter():
@@ -311,7 +333,7 @@ def get_adoptions_per_month():
 
 def get_days_in_shelter():
     """
-    
+    Finds amount of time a specific animal has been in their shelter
     """
     try:
         animal_id = int(input("Enter Animal ID: "))
@@ -329,30 +351,33 @@ def get_days_in_shelter():
 # Command-Line Functionality
 # ----------------------------------------------------------------------
 def show_options(staff_id):
-    print("\n========== Admin Menu ==========")
-    print("1. Add a new animal")
-    print("2. Add a new shelter")
-    print("3. Approve an adoption")
-    print("4. Perform medical check")
-    print("5. Check shelter animal counts")
-    print("6. Find breed adoption counts")
-    print("7. Check adoptions per month")
-    print("q. Logout/Exit")
     while True:
+        print("\n========== Admin Menu ==========")
+        print("1. Add a new animal")
+        print("2. Add a new shelter")
+        print("3. Check adoption requests")
+        print("4. Approve an adoption")
+        print("5. Perform medical check")
+        print("6. Check shelter animal counts")
+        print("7. Find breed adoption counts")
+        print("8. Check adoptions per month")
+        print("q. Logout/Exit")
         choice = input("\nSelect an option: ").strip().lower()
         if choice == '1':
             add_animal()
         elif choice == '2':
             add_shelter()
         elif choice == '3':
-            approve_adoption()
+            get_current_adoption_requests()
         elif choice == '4':
-            perform_medical_check()
+            approve_adoption()
         elif choice == '5':
-            get_animals_per_shelter()
+            perform_medical_check()
         elif choice == '6':
-            get_most_adopted_breeds()
+            get_animals_per_shelter()
         elif choice == '7':
+            get_most_adopted_breeds()
+        elif choice == '8':
             get_adoptions_per_month()
         elif choice == 'q':
             quit_ui()
@@ -381,6 +406,7 @@ def main():
         choice = input("Select an option: ").strip().lower()
         if choice == '1':
             staff_id = login_admin()
+            print("Your ID: ", staff_id)
             if staff_id:
                 show_options(staff_id)
         elif choice == '2':

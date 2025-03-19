@@ -16,10 +16,15 @@ RETURNS INT DETERMINISTIC
 BEGIN
     DECLARE intake DATE;
     DECLARE days INT;
-    SELECT intake_date INTO intake FROM animals WHERE animal_id = p_animal_id;
-    IF intake IS NULL THEN
-        RETURN NULL;
+    DECLARE animal_exists INT;
+
+    SELECT COUNT(*) INTO animal_exists FROM animals WHERE animal_id = p_animal_id;
+
+    IF animal_exists = 0 THEN
+        RETURN 0;
     END IF;
+
+    SELECT intake_date INTO intake FROM animals WHERE animal_id = p_animal_id;
     SET days = DATEDIFF(CURDATE(), intake);
     RETURN days;
 END !
@@ -50,7 +55,7 @@ BEGIN
 END !
 
 -- Procedure: Transfers an animal to a new shelter.
-CREATE PROCEDURE transfer_animal(IN p_animal_id INT, IN p_new_shelter_id INT)
+CREATE PROCEDURE transfer_animal(IN p_animal_id INT, IN p_new_shelter_id BIGINT UNSIGNED)
 BEGIN
     UPDATE animals
     SET shelter_id = p_new_shelter_id
@@ -64,29 +69,37 @@ CREATE PROCEDURE adopt_pet(
 )
 BEGIN
     DECLARE pet_available INT DEFAULT 0;
+    DECLARE pet_exists INT;
 
-    SELECT is_available
-    INTO pet_available
-    FROM animals
-    WHERE animal_id = p_pet_id;
+    SELECT COUNT(*) INTO pet_exists FROM animals WHERE animal_id = p_pet_id;
 
-    IF pet_available = 0 THEN
+    IF pet_exists = 0 THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'This pet is not available for adoption.';
+            SET MESSAGE_TEXT = 'Pet does not exist.';
     ELSE
-        -- Insert an adoption record using the current date
-        INSERT INTO adoptions (date_taken, adopter_id, animal_id, shelter_id)
-        SELECT CURDATE(), p_adopter_id, p_pet_id, shelter_id
+        SELECT is_available
+        INTO pet_available
         FROM animals
         WHERE animal_id = p_pet_id;
 
-        DELETE FROM adoption_requests
-        WHERE adopter_id = p_adopter_id
-            AND animal_id = p_pet_id;
+        IF pet_available = 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'This pet is not available for adoption.';
+        ELSE
+            -- Insert an adoption record using the current date
+            INSERT INTO adoptions (date_taken, adopter_id, animal_id, shelter_id)
+            SELECT CURDATE(), p_adopter_id, p_pet_id, shelter_id
+            FROM animals
+            WHERE animal_id = p_pet_id;
 
-        UPDATE animals
-        SET is_available = 0
-        WHERE animal_id = p_pet_id;
+            DELETE FROM adoption_requests
+            WHERE adopter_id = p_adopter_id
+                AND animal_id = p_pet_id;
+
+            UPDATE animals
+            SET is_available = 0
+            WHERE animal_id = p_pet_id;
+        END IF;
     END IF;
 END !
 
@@ -103,35 +116,39 @@ END !
 -- Procedure: Updates health status for an animal
 CREATE PROCEDURE update_health_status(IN p_animal_id INT, IN p_new_health_status TINYINT(1))
 BEGIN
-    UPDATE animals
-    SET is_healthy = p_new_health_status
-    WHERE animal_id = p_animal_id;
+    DECLARE animal_exists INT;
+    SELECT COUNT(*) INTO animal_exists FROM animals WHERE animal_id = p_animal_id;
+
+    IF animal_exists = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Animal does not exist.';
+    ELSE
+        UPDATE animals
+        SET is_healthy = p_new_health_status
+        WHERE animal_id = p_animal_id;
+    END IF;
 END !
 
 -- Trigger: After healthy medicals, animal is available
 -- OR, after adoption, animal is not available
 CREATE TRIGGER trg_update_availability
-AFTER UPDATE
+BEFORE UPDATE
 ON animals
 FOR EACH ROW
 BEGIN
     -- If the health_status changed to 'healthy', set availability_status to 'Available'
     IF OLD.is_healthy = 0 AND NEW.is_healthy = 1 THEN
-        UPDATE animals
-        SET is_available = 1
-        WHERE animal_id = NEW.animal_id;
+        SET NEW.is_available = 1;
     END IF;
 
     -- If an animal becomes unhealthy again, it should not be available for adoption
     IF OLD.is_healthy = 1 AND NEW.is_healthy = 0 THEN
-        UPDATE animals
-        SET is_available = 0
-        WHERE animal_id = NEW.animal_id;
+        SET NEW.is_available = 0;
     END IF;
 
     -- If an adoption occurs, update availability status
-    UPDATE animals
-    SET is_available = 0
-    WHERE animal_id = NEW.animal_id
-    AND EXISTS (SELECT 1 FROM adoptions WHERE animal_id = NEW.animal_id);
+    IF EXISTS (SELECT 1 FROM adoptions WHERE animal_id = NEW.animal_id) THEN
+        SET NEW.is_available = 0;
+    END IF;
 END !
+DELIMITER ;

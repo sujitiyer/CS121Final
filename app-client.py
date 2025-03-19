@@ -70,6 +70,7 @@ def run_query(sql, params=()):
         if cursor.description: 
             rows = cursor.fetchall()
             return rows
+        conn.commit() # had to use this for the sp_add_adopter function to actually make changes
         return True
     except mysql.connector.Error as err:
         if DEBUG:
@@ -94,22 +95,26 @@ def register_adopter():
     new_password = input("Enter password: ")
     new_name = input("Enter name: ")
     new_address = input("Enter address: ")
-    new_zipcode = int(input("Enter zipcode: "))
+    while True:
+        try:
+            new_zipcode = int(input("Enter zipcode: "))
+            break
+        except ValueError:
+            print("\nERROR: Please enter a valid integer.\n")
     new_phone = input("Enter phone number: ")
-    new_date_joined = input("Enter date joined (YYYY-MM-DD): ")
-
-    try:
-        new_date_joined = datetime.strptime(new_date_joined, "%Y-%m-%d").date()
-    except ValueError:
-        print("Invalid date format. Use YYYY-MM-DD.")
-        return False
+    while True:
+        try:
+            new_date_joined = input("Enter date joined (YYYY-MM-DD): ")
+            break
+        except ValueError:
+            print("\nInvalid date format. Use YYYY-MM-DD.\n")
 
     sql = """CALL sp_add_adopter(%s, %s, %s, %s, %s, %s, %s);"""
     result = run_query(sql, (new_email, new_password, new_name, new_address, new_zipcode, new_phone, new_date_joined))
     if result:
-        print("Registration successful!")
+        print("\nRegistration successful!\n")
     else:
-        print("Registration failed.")
+        print("\nRegistration failed.\n")
     return bool(result)
 
 def login_adopter():
@@ -121,16 +126,17 @@ def login_adopter():
     email = input("Email: ")
     password = input("Password: ")
     
+    cursor = conn.cursor()
     # Call the MySQL authentication function
-    sql = "SELECT authenticate_adopter(%s, %s);"
+    sql = 'SELECT authenticate_adopter(%s, %s);'
     result = run_query(sql, (email, password))
 
-    if result and result[0][0] is not None:
+    if result and result[0][0] != 0:
         adopter_id = result[0][0]  # Extract the adopter_id
-        print("Login successful!")
+        print("\nLogin successful!\n")
         return adopter_id
 
-    print("Login failed. Please check your credentials.")
+    print("\nLogin failed. Please check your credentials.\n")
     return None
 
 
@@ -141,10 +147,13 @@ def view_available_animals():
     sql = "SELECT * FROM animals WHERE is_available = 1;"
     rows = run_query(sql)
     if rows:
+        print("\n=== Available Animals ===\n")
+        print(f"{'ID'.ljust(5)} {'Name'.ljust(15)} {'Breed'.ljust(20)} {'Age'.ljust(5)} {'Gender'}")
+        print("-" * 55)
         for row in rows:
-            print(row)
+            print(f"{str(row[0]).ljust(5)} {row[1].ljust(15)} {row[2].ljust(20)} {str(row[3]).ljust(5)} {row[4]}")
     else:
-        print("No available animals found.")
+        print("\nNo available animals found.\n")
 
 def view_animal_details():
     """
@@ -158,9 +167,16 @@ def view_animal_details():
     sql = "SELECT * FROM animals WHERE animal_id = %s;"
     rows = run_query(sql, (animal_id,))
     if rows:
-        print(rows[0])
+        row = rows[0]
+        print("\n=== Animal Details ===\n")
+        print(f"Animal ID: {row[0]}")
+        print(f"Name: {row[1]}")
+        print(f"Breed: {row[2]}")
+        print(f"Age: {row[3]}")
+        print(f"Gender: {row[4]}")
+        print(f"Availability: {'Yes' if row[5] else 'No'}")
     else:
-        print("Animal not found.")
+        print("\nAnimal not found.\n")
 
 def search_animals():
     """
@@ -181,10 +197,13 @@ def search_animals():
         params.append(age + 2)
     rows = run_query(sql, tuple(params))
     if rows:
+        print("\n=== Search Results: Matching Animals ===\n")
+        print(f"{'ID'.ljust(5)} {'Name'.ljust(15)} {'Breed'.ljust(20)} {'Age'.ljust(5)} {'Gender'.ljust(8)} {'Available'}")
+        print("-" * 65)
         for row in rows:
-            print(row)
+            print(f"{str(row[0]).ljust(5)} {row[1].ljust(15)} {row[2].ljust(20)} {str(row[3]).ljust(5)} {row[4].ljust(8)} {('Yes' if row[5] else 'No')}")
     else:
-        print("No matching animals found.")
+        print("\n No matching animals found.\n")
 
 def find_animals_by_distance(adopter_id):
     """
@@ -210,10 +229,13 @@ def find_animals_by_distance(adopter_id):
     params = (adopter_zip,)
     rows = run_query(sql, params)
     if rows:
+        print("\n=== Available Animals Near You ===\n")
+        print(f"{'ID'.ljust(5)} {'Name'.ljust(15)} {'Breed'.ljust(20)} {'Age'.ljust(5)} {'Gender'.ljust(8)} {'Shelter ZIP'.ljust(12)} {'Distance'}")
+        print("-" * 80)
         for row in rows:
-            print(row)
+            print(f"{str(row[0]).ljust(5)} {row[1].ljust(15)} {row[2].ljust(20)} {str(row[3]).ljust(5)} {row[4].ljust(8)} {str(row[6]).ljust(12)} {row[6]}")
     else:
-        print("No animals found nearby.")
+        print("\nNo animals found nearby.\n")
 
 def submit_adoption_request(adopter_id):
     """
@@ -231,9 +253,9 @@ def submit_adoption_request(adopter_id):
     sql = "CALL submit_adoption_request(%s, %s);"
     result = run_query(sql, (adopter_id, animal_id))
     if result:
-        print("Adoption request submitted successfully!")
+        print("\nAdoption request submitted successfully! An administrator will review your request.\n")
     else:
-        print("Failed to submit adoption request.")
+        print("\nFailed to submit adoption request.\n")
 
 def view_adoption_history(adopter_id):
     """
@@ -248,10 +270,13 @@ def view_adoption_history(adopter_id):
     """
     adoptions = run_query(sql, (adopter_id,))
     if adoptions:
+        print("\n=== Your Adoption History ===\n")
+        print(f"{'ID'.ljust(5)} {'Name'.ljust(15)} {'Breed'.ljust(20)} {'Age'.ljust(5)} {'Gender'.ljust(8)} {'Adoption Date'}")
+        print("-" * 75)
         for adoption in adoptions:
-            print(adoptions)
+            print(f"{str(adoption[0]).ljust(5)} {adoption[1].ljust(15)} {adoption[2].ljust(20)} {str(adoption[3]).ljust(5)} {adoption[4].ljust(8)} {adoption[5]}")
     else:
-        print("No adoption history found.")
+        print("\nNo adoption history found.\n")
 
 # ----------------------------------------------------------------------
 # Command-Line Functionality
@@ -307,6 +332,7 @@ def main():
         choice = input("Select an option: ").strip().lower()
         if choice == '1':
             adopter_id = login_adopter()
+            print("Your ID: ", adopter_id)
             if adopter_id:
                 show_options(adopter_id)
         elif choice == '2':
