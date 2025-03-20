@@ -132,4 +132,4 @@ SELECT
 FROM animals a
 JOIN adoptions ad ON a.animal_id = ad.animal_id;
 
-CREATE INDEX idx_intake_date ON animals(intake_date);
+CREATE INDEX idx_adoptions_date ON adoptions(date_taken);
