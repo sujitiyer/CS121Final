@@ -70,7 +70,9 @@ BEGIN
   DECLARE stored_salt CHAR(8);
   DECLARE stored_hash BINARY(64);
   DECLARE computed_hash BINARY(64);
-  -- On success, we want to return the adopter ID
+  -- Instead of returning TINYINT on success, we modified the code
+  -- We return the adopter's ID instead and use this ID during
+  -- the python session.
   DECLARE aid BIGINT UNSIGNED;
   
   SELECT adopter_id, salt, password_hash
@@ -110,5 +112,41 @@ BEGIN
   ELSE
     RETURN 0;
   END IF;
+END !
+DELIMITER ;
+
+-- Create a procedure sp_change_user_password to generate a new salt and change the given
+-- user's password to the given password (after salting and hashing)
+DELIMITER !
+CREATE PROCEDURE sp_change_user_password(email VARCHAR(255), new_password VARCHAR(20))
+BEGIN
+  DECLARE new_salt CHAR(8);
+  DECLARE new_hash BINARY(64);
+
+  SET new_salt = make_salt(8);
+  SET new_hash = SHA2(CONCAT(new_salt, new_password), 256);
+
+  UPDATE adopters
+  SET salt = new_salt,
+    password_hash = new_hash
+  WHERE adopters.email = email;
+END !
+DELIMITER ;
+
+DELIMITER !
+-- Create a procedure sp_change_staff_password to generate a new salt and change the given
+-- staff's password to the given password (after salting and hashing)
+CREATE PROCEDURE sp_change_staff_password(email VARCHAR(255), new_password VARCHAR(20))
+BEGIN
+  DECLARE new_salt CHAR(8);
+  DECLARE new_hash BINARY(64);
+
+  SET new_salt = make_salt(8);
+  SET new_hash = SHA2(CONCAT(new_salt, new_password), 256);
+
+  UPDATE staff
+  SET salt = new_salt,
+    password_hash = new_hash
+  WHERE staff.email = email;
 END !
 DELIMITER ;

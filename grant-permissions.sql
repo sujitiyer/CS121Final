@@ -7,6 +7,7 @@ CREATE USER 'animalclient'@'localhost' IDENTIFIED BY 'clientpw';
 GRANT ALL PRIVILEGES ON shelterdb.* TO 'animaladmin'@'localhost';
 GRANT SELECT ON shelterdb.* TO 'animalclient'@'localhost';
 GRANT EXECUTE ON FUNCTION shelterdb.authenticate_adopter TO 'animalclient'@'localhost';
+GRANT EXECUTE ON PROCEDURE shelterdb.sp_change_user_password TO 'animalclient'@'localhost';
 GRANT EXECUTE ON PROCEDURE shelterdb.sp_add_adopter TO 'animalclient'@'localhost';
 GRANT EXECUTE ON PROCEDURE shelterdb.submit_adoption_request TO 'animalclient'@'localhost';
 FLUSH PRIVILEGES;

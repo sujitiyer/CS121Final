@@ -103,8 +103,9 @@ def register_adopter():
             print("\nERROR: Please enter a valid integer.\n")
     new_phone = input("Enter phone number: ")
     while True:
+        new_date_joined = input("Enter date joined (YYYY-MM-DD): ")
         try:
-            new_date_joined = input("Enter date joined (YYYY-MM-DD): ")
+            datetime.strptime(new_date_joined, "%Y-%m-%d")
             break
         except ValueError:
             print("\nInvalid date format. Use YYYY-MM-DD.\n")
@@ -139,6 +140,30 @@ def login_adopter():
     print("\nLogin failed. Please check your credentials.\n")
     return None
 
+def change_user_password():
+    """
+    Prompts the user for their email and a new password.
+    Calls the stored procedure sp_change_user_password to update the password.
+    """
+    print("\n=== Change User Password ===")
+
+    email = input("Enter your email: ").strip()
+    if not email:
+        print("\nEmail cannot be empty.\n")
+        return
+
+    new_password = input("Enter new password: ").strip()
+    if not new_password:
+        print("\nPassword cannot be empty.\n")
+        return
+
+    sql = "CALL sp_change_user_password(%s, %s);"
+    result = run_query(sql, (email, new_password))
+
+    if result:
+        print("\nPassword changed successfully!\n")
+    else:
+        print("\nFailed to change password. Please try again.\n")
 
 def view_available_animals():
     """
@@ -328,6 +353,7 @@ def main():
         print("\n====== Welcome to the Animal Shelter App ======")
         print("1. Login as an adopter")
         print("2. Register as a new adopter")
+        print("3. Change your password")
         print("q. Quit")
         choice = input("Select an option: ").strip().lower()
         if choice == '1':
@@ -337,6 +363,8 @@ def main():
                 show_options(adopter_id)
         elif choice == '2':
             register_adopter()
+        elif choice == '3':
+            change_user_password()
         elif choice == 'q':
             quit_ui()
         else:

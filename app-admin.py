@@ -124,6 +124,31 @@ def login_admin():
     print("\nLogin failed. Please check your credentials.\n")
     return None
 
+def change_staff_password():
+    """
+    Prompts the staff member for their email and a new password.
+    Calls the stored procedure sp_change_staff_password to update the password.
+    """
+    print("\n=== Change Staff Password ===")
+
+    email = input("Enter your email: ").strip()
+    if not email:
+        print("\nEmail cannot be empty.\n")
+        return
+
+    new_password = input("Enter new password: ").strip()
+    if not new_password:
+        print("\nPassword cannot be empty.\n")
+        return
+
+    sql = "CALL sp_change_staff_password(%s, %s);"
+    result = run_query(sql, (email, new_password))
+
+    if result:
+        print("\nPassword changed successfully!\n")
+    else:
+        print("\nFailed to change password. Please try again.\n")
+
 def add_animal():
     """
     Calls the stored procedure add_animal to add a new animal to the database.
@@ -402,6 +427,7 @@ def main():
         print("\n====== Welcome to the Animal Shelter App ======")
         print("1. Login as an Administrator")
         print("2. Register as new Staff")
+        print("3. Change your password")
         print("q. Quit")
         choice = input("Select an option: ").strip().lower()
         if choice == '1':
@@ -411,6 +437,8 @@ def main():
                 show_options(staff_id)
         elif choice == '2':
             register_admin()
+        elif choice == '3':
+            change_staff_password()
         elif choice == 'q':
             quit_ui()
         else:
