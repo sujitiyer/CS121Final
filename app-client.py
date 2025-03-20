@@ -17,7 +17,7 @@ from datetime import datetime
 
 # Debugging flag to print errors when debugging that shouldn't be visible
 # to an actual client. ***Set to False when done testing.***
-DEBUG = True
+DEBUG = False
 
 # Global connection (initialized in __main__ block)
 conn = None
@@ -258,7 +258,7 @@ def find_animals_by_distance(adopter_id):
         print(f"{'ID'.ljust(5)} {'Name'.ljust(15)} {'Breed'.ljust(20)} {'Age'.ljust(5)} {'Gender'.ljust(8)} {'Shelter ZIP'.ljust(12)} {'Distance'}")
         print("-" * 80)
         for row in rows:
-            print(f"{str(row[0]).ljust(5)} {row[1].ljust(15)} {row[2].ljust(20)} {str(row[3]).ljust(5)} {row[4].ljust(8)} {str(row[6]).ljust(12)} {row[6]}")
+            print(f"{str(row[0]).ljust(5)} {row[1].ljust(15)} {row[2].ljust(20)} {str(row[3]).ljust(5)} {row[4].ljust(8)} {str(row[9]).ljust(12)} {row[10]}")
     else:
         print("\nNo animals found nearby.\n")
 
@@ -280,7 +280,7 @@ def submit_adoption_request(adopter_id):
     if result:
         print("\nAdoption request submitted successfully! An administrator will review your request.\n")
     else:
-        print("\nFailed to submit adoption request.\n")
+        print("\nFailed to submit adoption request. Make sure Animal ID exists.\n")
 
 def view_adoption_history(adopter_id):
     """

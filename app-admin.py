@@ -16,7 +16,7 @@ from datetime import datetime
 
 # Debugging flag to print errors when debugging that shouldn't be visible
 # to an actual client. ***Set to False when done testing.***
-DEBUG = True
+DEBUG = False
 
 # Global connection (initialized in __main__ block)
 conn = None
@@ -177,7 +177,7 @@ def add_animal():
     if result:
         print("\nAnimal added successfully!\n")
     else:
-        print("\nFailed to add animal.\n")
+        print("\nFailed to add animal. Check to make sure shelter id is valid.\n")
     return bool(result)
 
 def add_shelter():
@@ -200,7 +200,7 @@ def add_shelter():
     if result:
         print("\nShelter added successfully!\n")
     else:
-        print("\nFailed to add shelter.\n")
+        print("\nFailed to add shelter. Ensure managing staff ID is valid.\n")
     return bool(result)
 
 def transfer_animal():
@@ -222,7 +222,7 @@ def transfer_animal():
     if result:
         print("\nAnimal transferred successfully!\n")
     else:
-        print("\nFailed to transfer animal.\n")
+        print("\nFailed to transfer animal. Make sure shelter ID and animal ID both exist.\n")
     return bool(result)
 
 def get_current_adoption_requests():
@@ -230,7 +230,7 @@ def get_current_adoption_requests():
     Retrieves all current adoption requests.
     """
     sql = """
-        SELECT ar.request_id, a.name AS animal_name, ad.name AS adopter_name, ar.request_date
+        SELECT ar.request_id, a.animal_id as animal_id, a.name AS animal_name, ad.adopter_id as adopter_id, ad.name AS adopter_name, ar.request_date
         FROM adoption_requests ar
         JOIN animals a ON ar.animal_id = a.animal_id
         JOIN adopters ad ON ar.adopter_id = ad.adopter_id
@@ -238,11 +238,12 @@ def get_current_adoption_requests():
     """
     result = run_query(sql)   
     if result:
-        print("\n=== Current Adoption Requests ===\n")
-        print(f"{'Request ID'.ljust(12)} {'Animal Name'.ljust(20)} {'Adopter Name'.ljust(20)} {'Request Date'}")
-        print("-" * 65)
+        headers = ["Request ID", "Animal ID", "Animal Name", "Adopter ID", "Adopter Name", "Request Date"]
+        col_widths = [12, 10, 20, 10, 20, 15]
+        print(" | ".join(header.ljust(width) for header, width in zip(headers, col_widths)))
+        print("-" * sum(col_widths) + "-" * (len(headers) * 3))
         for row in result:
-            print(f"{str(row[0]).ljust(12)} {row[1].ljust(20)} {row[2].ljust(20)} {row[3]}")
+            print(" | ".join(str(item).ljust(width) for item, width in zip(row, col_widths)))
     else:
         print("\n No current adoption requests found.\n")
 
@@ -265,7 +266,7 @@ def approve_adoption():
     if result:
         print("\nAdoption successful!.\n")
     else:
-        print("\nAdoption failed.\n")
+        print("\nAdoption failed. Make sure animal ID and adopter ID are both in adoption requests.\n")
     return bool(result)
 
 def perform_medical_check():
@@ -295,7 +296,7 @@ def perform_medical_check():
         print("\nHealth status updated successfully!\n")
         return True
     else:
-        print("\nFailed to update health status.\n")
+        print("\nFailed to update health status. Make sure animal id exists.\n")
         return False
 
 def get_animals_per_shelter():
@@ -367,8 +368,8 @@ def get_days_in_shelter():
         return False
     sql = "SELECT days_in_shelter(%s);"
     rows = run_query(sql, (animal_id,))
-    if rows:
-        print(rows[0][0])
+    if rows and rows[0][0] != 0:
+        print(rows[0][0], "days")
     else:
         print("Animal not found.")
 
@@ -386,6 +387,7 @@ def show_options(staff_id):
         print("6. Check shelter animal counts")
         print("7. Find breed adoption counts")
         print("8. Check adoptions per month")
+        print("9. Check animal time in shelter")
         print("q. Logout/Exit")
         choice = input("\nSelect an option: ").strip().lower()
         if choice == '1':
@@ -404,6 +406,8 @@ def show_options(staff_id):
             get_most_adopted_breeds()
         elif choice == '8':
             get_adoptions_per_month()
+        elif choice == '9':
+            get_days_in_shelter()
         elif choice == 'q':
             quit_ui()
         else:
